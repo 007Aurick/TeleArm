@@ -1,4 +1,4 @@
-# 🦾 TeleArm — SLAM-Mapped Mobile Manipulator
+# 🦾 TeleARM — SLAM-Mapped Mobile Manipulator
 
 > A teleoperated mobile robot that maps its environment in real time and performs on-demand pick-and-place using a mounted robotic arm — all visualized live in RViz2.
 
@@ -13,7 +13,7 @@
 
 ## 📖 Overview
 
-**TeleArm** combines three core ROS2 concepts into one working robot:
+**TeleARM** combines three core ROS2 concepts into one working robot:
 
 - 🕹️ **Manual driving** via teleop keyboard control
 - 🗺️ **Live SLAM mapping** of the environment using LiDAR
