@@ -5,7 +5,7 @@ from geometry_msgs.msg import TwistStamped
 class CleanupController(Node):
     def __init__(self):
         super().__init__('cleanup_controller')
-        self.publisher = self.create_publisher(TwistStamped, 'cmd_vel', 10)
+        self.publisher = self.create_publisher(TwistStamped, '/diff_drive_base_controller/cmd_vel', 10)
         self.timer = self.create_timer(0.05, self.publish_command)
 
     

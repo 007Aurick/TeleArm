@@ -21,11 +21,6 @@ def generate_launch_description():
             ])
         ]),
         launch_arguments={
-            'world': PathJoinSubstitution([
-                FindPackageShare('wheeled_robot'),
-                'config',
-                'walls.world',
-            ]),
             'use_sim_time': 'true',
         }.items(),
     )
