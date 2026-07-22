@@ -1,0 +1,8 @@
+source;share/TeleARM/hook/cmake_prefix_path.ps1
+source;share/TeleARM/hook/cmake_prefix_path.dsv
+source;share/TeleARM/hook/cmake_prefix_path.sh
+source;share/TeleARM/local_setup.bash
+source;share/TeleARM/local_setup.dsv
+source;share/TeleARM/local_setup.ps1
+source;share/TeleARM/local_setup.sh
+source;share/TeleARM/local_setup.zsh

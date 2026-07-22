@@ -1,0 +1,4 @@
+source;share/TeleARM/local_setup.bash
+source;share/TeleARM/local_setup.dsv
+source;share/TeleARM/local_setup.sh
+source;share/TeleARM/local_setup.zsh

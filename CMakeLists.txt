@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.8)
-project(warehouse_cleanup_sim)
+project(TeleARM)
 
 if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   add_compile_options(-Wall -Wextra -Wpedantic)
@@ -16,7 +16,9 @@ install(DIRECTORY
 )
 
 install(PROGRAMS
-  warehouse_cleanup_sim/cleanup_controller.py
+  scripts/diff_drive_publisher.py
+  TeleARM_control/cleanup_controller.py
+  TeleARM_control/cmd_vel_relay.py
   DESTINATION lib/${PROJECT_NAME}
 )
 
