@@ -1,11 +1,12 @@
-# 🦾 TeleARM — SLAM-Mapped Mobile Manipulator
+# 🦾 TeleARM — Autonomous Perception-Guided Mobile Manipulator
 
-> A teleoperated mobile robot that maps its environment in real time and performs on-demand pick-and-place using a mounted robotic arm — all visualized live in RViz2.
+> An autonomous mobile robot that detects objects with a camera, navigates to them while avoiding obstacles with LiDAR, and picks them up using a mounted robotic arm — all visualized live in RViz2.
 
 ![ROS2](https://img.shields.io/badge/ROS2-Humble-blue?logo=ros&logoColor=white)
 ![Gazebo](https://img.shields.io/badge/Gazebo-Simulation-orange?logo=gazebo&logoColor=white)
 ![RViz2](https://img.shields.io/badge/RViz2-Visualization-9cf)
 ![SLAM](https://img.shields.io/badge/SLAM-slam__toolbox-green)
+![Nav2](https://img.shields.io/badge/Nav2-Autonomous%20Navigation-blueviolet)
 ![Status](https://img.shields.io/badge/status-in%20development-yellow)
 ![License](https://img.shields.io/badge/license-MIT-lightgrey)
 
@@ -13,42 +14,52 @@
 
 ## 📖 Overview
 
-**TeleARM** combines three core ROS2 concepts into one working robot:
+**TeleARM** combines perception, autonomous navigation, and manipulation into one working robot:
 
-- 🕹️ **Manual driving** via teleop keyboard control
-- 🗺️ **Live SLAM mapping** of the environment using LiDAR
-- 🦾 **On-command pick-and-place** using a mounted robotic arm
+- 📷 **Camera-based object detection** — spot a target object in the environment
+- 🗺️ **Autonomous navigation** using `Nav2` + LiDAR, driving to the detected object while avoiding obstacles
+- 🦾 **Automatic pick-and-place** using a mounted robotic arm, triggered on arrival
 
-Drive the robot around a warehouse-style environment, watch the map build live in RViz2, and press a single key to trigger the arm's pick-and-place sequence wherever you've stopped. No autonomous navigation, no object detection required — just clean, understandable ROS2 fundamentals stacked together.
+No keyboard, no manual driving, no manual goal-setting — the robot decides where to go and what to do based on what it sees.
 
 ---
 
 ## ✨ Features
 
-- 🚗 Manual teleoperation of a differential-drive mobile base (`/cmd_vel`)
-- 📡 Real-time SLAM mapping using `slam_toolbox` + LiDAR scan data
+- 📷 Real-time object detection from a mounted RGB(-D) camera
+- 📍 Detected object position converted into a navigation goal in the map frame
+- 🧭 Fully autonomous point-to-point navigation via `Nav2`, using LiDAR-based obstacle avoidance
 - 🌲 Full TF tree: `map → odom → base_link → arm_base_link → ... → gripper`
 - 🦾 Fixed-mount robotic arm riding on top of the mobile base
-- ⌨️ Single keypress trigger (`spacebar`) to execute a scripted pick-and-place pose sequence
-- 🖥️ Fully visualized in RViz2 — robot model, TF frames, LiDAR scan, and occupancy grid map
+- 🤖 Automatic pick-and-place sequence triggered on goal arrival (no keypress needed)
+- 🖥️ Fully visualized in RViz2 — robot model, TF frames, LiDAR scan, occupancy grid map, camera feed, and detected object markers
 
 ---
 
 ## 🧠 How It Works
+📷 Camera ──► Object Detection ──► Object Position (pixel + depth)
+│
+▼
+Position ──► Transformed into Map Frame
+│
+▼
+Goal Pose ──► Nav2 ──► Path Planning + Obstacle Avoidance
+│ ▲
+│ │
+│ 📡 LiDAR Scan
+▼
+Robot Drives Autonomously to Object
+│
+▼
+Goal Reached ──► Arm Node ──► Pick-and-Place Sequence
+│
+▼
+🖥️ RViz2 renders everything together
 
-```
-🕹️ Teleop Keys ──► /cmd_vel ──► Base Drives ──► Odometry ──► TF (base position)
-                                                     │
-📡 LiDAR ───────────────────────────────────────────┼──► slam_toolbox ──► 🗺️ Live Map
-                                                     │
-⌨️ Spacebar ──► /trigger_pickplace ──► Arm Node ──► /joint_states ──► TF (arm position)
-                                                     │
-                                          🖥️ RViz2 renders everything together
-```
-
-- **Driving** and **arm control** are fully independent systems that just happen to share the same robot chassis.
-- SLAM has **zero awareness** of the arm — it only processes LiDAR scan data and odometry.
-- The arm is mounted via a **fixed joint** on top of the base, so it moves along with the robot but operates on its own separate TF branch.
+- **Perception** (camera) decides *where* the robot should go.
+- **Navigation** (`Nav2` + LiDAR) decides *how* to get there safely.
+- **Manipulation** (arm) executes *what* happens once the robot arrives.
+- Each subsystem is modular — detection, navigation, and arm control communicate only through well-defined topics/goals, not tight coupling.
 
 ---
 
@@ -58,25 +69,24 @@ Drive the robot around a warehouse-style environment, watch the map build live i
 |-----------------------|--------------------------------------|
 | Middleware            | ROS2 (Humble)                        |
 | Simulation             | Gazebo                              |
-| Mapping                 | `slam_toolbox`                     |
+| Perception              | Camera (RGB or RGB-D) + detection node |
+| Navigation              | `Nav2` (planner, controller, costmaps) |
+| Localization/Mapping    | `slam_toolbox` (pre-built or live map) |
 | Visualization           | RViz2                               |
 | Robot Description      | URDF / Xacro                        |
-| Teleoperation           | `teleop_twist_keyboard`             |
 | Arm Control             | Custom joint-state publisher node   |
 
 ---
 
 ## 📂 Project Structure
-
-```
 telearm_ws/
-├── telearm_description/     # URDF/Xacro files for base + arm
-│   ├── urdf/
-│   └── meshes/
-├── telearm_bringup/         # Launch files (SLAM, teleop, RViz configs)
-├── telearm_arm_control/     # Pick-and-place trigger + pose sequence node
+├── telearm_description/ # URDF/Xacro files for base + arm
+│ ├── urdf/
+│ └── meshes/
+├── telearm_bringup/ # Launch files (sim, SLAM, Nav2, RViz configs)
+├── telearm_perception/ # Camera-based object detection node(s)
+├── telearm_arm_control/ # Pick-and-place trigger + pose sequence node
 └── README.md
-```
 
 ---
 
@@ -86,7 +96,8 @@ telearm_ws/
 - ROS2 Humble
 - Gazebo
 - `slam_toolbox`
-- `teleop_twist_keyboard`
+- `Nav2`
+- OpenCV (or equivalent) for object detection
 
 ### Build
 ```bash
@@ -100,29 +111,30 @@ source install/setup.bash
 # Terminal 1 — launch simulation + robot
 ros2 launch telearm_bringup telearm_sim.launch.py
 
-# Terminal 2 — start SLAM
-ros2 launch telearm_bringup slam.launch.py
+# Terminal 2 — launch Nav2 with a saved map
+ros2 launch telearm_bringup navigation.launch.py
 
-# Terminal 3 — teleop keyboard
-ros2 run teleop_twist_keyboard teleop_twist_keyboard
+# Terminal 3 — start object detection
+ros2 run telearm_perception object_detector
 
 # Terminal 4 — arm control node
 ros2 run telearm_arm_control pick_place_trigger
 ```
 
-Drive around with `WASD`, watch the map build in RViz2, and press **spacebar** to trigger the arm's pick-and-place sequence. 🦾📦
+The robot detects an object with its camera, autonomously navigates to it while avoiding obstacles, and triggers the arm's pick-and-place sequence on arrival. 🦾📦
 
 ---
 
 ## 🎯 Roadmap
 
-- [x] Manual teleop driving
-- [x] Live SLAM mapping
-- [x] Arm mounted on mobile base
-- [x] Keypress-triggered pick-and-place
-- [ ] 📷 Camera-based object detection (auto-trigger instead of keypress)
-- [ ] 🎨 Color-based sorting into multiple bins
-- [ ] 🤖 MoveIt2 integration for real motion planning
+- [x] Robot model + simulation environment
+- [x] LiDAR-based SLAM mapping
+- [x] Nav2 autonomous navigation to a manual goal
+- [ ] 📷 Camera-based object detection
+- [ ] 📍 Detection → navigation goal conversion
+- [ ] 🤖 Auto-trigger pick-and-place on arrival
+- [ ] 🎨 Color/class-based sorting into multiple bins
+- [ ] 🧠 MoveIt2 integration for real motion planning of the arm
 
 ---
 
@@ -143,7 +155,6 @@ This project is licensed under the MIT License — see the [LICENSE](LICENSE) fi
 - [ros2_control_demos](https://github.com/ros-controls/ros2_control_demos)
 - [ROBOTIS OpenManipulator](https://github.com/ROBOTIS-GIT/open_manipulator)
 - [slam_toolbox](https://github.com/SteveMacenski/slam_toolbox)
+- [Nav2](https://github.com/ros-navigation/navigation2)
 
 ---
-
-<p align="center">Built with ⚙️, ☕, and way too many terminal windows.</p>
